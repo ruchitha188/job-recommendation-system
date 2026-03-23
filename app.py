@@ -1,241 +1,675 @@
 import streamlit as st
+import time
 
-# ── Page config ──────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# PAGE CONFIG
+# ─────────────────────────────────────────────
 st.set_page_config(
-    page_title="Job Recommendation System",
+    page_title="CareerPath AI — Job Recommendation System",
     page_icon="🎯",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# ── Custom CSS ───────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# FULL CUSTOM CSS
+# ─────────────────────────────────────────────
 st.markdown("""
 <style>
-.main-header {
-    background: linear-gradient(135deg, #16213e, #0f3460);
-    padding: 40px; border-radius: 12px;
-    text-align: center; color: white; margin-bottom: 32px;
-}
-.main-header h1 { font-size: 2.5rem; margin-bottom: 8px; }
-.main-header h1 span { color: #e94560; }
-.main-header p { color: #b0c4de; font-size: 1.1rem; }
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
+/* ── ROOT THEME ── */
+:root {
+    --navy:    #0d1b2a;
+    --navy2:   #1b2d3f;
+    --teal:    #00c9a7;
+    --teal2:   #00a381;
+    --red:     #e94560;
+    --gold:    #f5a623;
+    --white:   #f0f4f8;
+    --muted:   #8a9bb0;
+    --card-bg: #162032;
+    --border:  rgba(0,201,167,0.18);
+}
+
+/* ── GLOBAL ── */
+html, body, [class*="css"] {
+    font-family: 'DM Sans', sans-serif !important;
+    background-color: var(--navy) !important;
+    color: var(--white) !important;
+}
+.stApp { background: var(--navy) !important; }
+
+/* hide default streamlit elements */
+#MainMenu, footer, header { visibility: hidden; }
+.block-container { padding: 2rem 2.5rem 4rem !important; max-width: 1200px; }
+
+/* ── SIDEBAR ── */
+[data-testid="stSidebar"] {
+    background: var(--navy2) !important;
+    border-right: 1px solid var(--border);
+}
+[data-testid="stSidebar"] * { color: var(--white) !important; }
+[data-testid="stSidebar"] .stSelectbox label {
+    color: var(--muted) !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+[data-testid="stSidebar"] [data-baseweb="select"] {
+    background: var(--navy) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+}
+
+/* ── HEADINGS ── */
+h1, h2, h3, h4 {
+    font-family: 'Sora', sans-serif !important;
+    color: var(--white) !important;
+}
+
+/* ── HERO BANNER ── */
+.hero-banner {
+    background: linear-gradient(135deg, #0d1b2a 0%, #1a2f45 50%, #0d2233 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 56px 48px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+}
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,201,167,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.hero-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(233,69,96,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.hero-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    color: var(--white);
+}
+.hero-title span { color: var(--teal); }
+.hero-sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+    margin-bottom: 0;
+    max-width: 500px;
+    line-height: 1.7;
+}
+.hero-badge {
+    display: inline-block;
+    background: rgba(0,201,167,0.12);
+    border: 1px solid rgba(0,201,167,0.3);
+    color: var(--teal);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+/* ── STAT CARDS ── */
+.stat-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+.stat-card {
+    flex: 1; min-width: 140px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 20px;
+    text-align: center;
+}
+.stat-num {
+    font-family: 'Sora', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--teal);
+    display: block;
+}
+.stat-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* ── FEATURE CARDS ── */
+.feature-grid { display: flex; gap: 20px; margin-bottom: 36px; flex-wrap: wrap; }
+.feature-card {
+    flex: 1; min-width: 220px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    transition: border-color 0.2s;
+}
+.feature-card:hover { border-color: var(--teal); }
+.feature-icon { font-size: 2rem; margin-bottom: 14px; display: block; }
+.feature-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+}
+.feature-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+
+/* ── SECTION TITLE ── */
+.section-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+}
+.section-sub {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-bottom: 28px;
+}
+
+/* ── FORM CARD ── */
+.form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 32px;
+}
+
+/* ── INPUTS ── */
+.stTextInput input, .stTextArea textarea, .stSelectbox [data-baseweb="select"] {
+    background: var(--navy) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    color: var(--white) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.95rem !important;
+    padding: 12px 16px !important;
+}
+.stTextInput input:focus, .stTextArea textarea:focus {
+    border-color: var(--teal) !important;
+    box-shadow: 0 0 0 3px rgba(0,201,167,0.1) !important;
+}
+.stTextInput label, .stTextArea label, .stSelectbox label {
+    color: var(--muted) !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    margin-bottom: 6px !important;
+}
+
+/* ── BUTTONS ── */
+.stButton button {
+    background: linear-gradient(135deg, var(--teal), var(--teal2)) !important;
+    color: var(--navy) !important;
+    font-family: 'Sora', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 14px 32px !important;
+    width: 100% !important;
+    letter-spacing: 0.03em !important;
+    transition: opacity 0.2s !important;
+}
+.stButton button:hover { opacity: 0.88 !important; }
+
+/* ── JOB CARD ── */
 .job-card {
-    background: white; border-left: 4px solid #e94560;
-    border-radius: 8px; padding: 20px; margin-bottom: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    position: relative;
+    transition: border-color 0.2s;
+}
+.job-card:hover { border-color: var(--teal); }
+.job-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+}
+.job-meta {
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+.job-meta span { color: var(--teal); font-weight: 600; }
+.job-desc { font-size: 0.9rem; color: #a0b0c0; line-height: 1.65; margin-bottom: 14px; }
+.job-skills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.skill-pill {
+    background: rgba(0,201,167,0.08);
+    border: 1px solid rgba(0,201,167,0.2);
+    color: var(--teal);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+.skill-pill.missing {
+    background: rgba(233,69,96,0.08);
+    border-color: rgba(233,69,96,0.2);
+    color: var(--red);
 }
 .match-badge {
-    background: #e94560; color: white;
-    padding: 4px 12px; border-radius: 20px;
-    font-size: 0.85rem; font-weight: bold; float: right;
+    position: absolute;
+    top: 24px; right: 24px;
+    background: linear-gradient(135deg, var(--teal), var(--teal2));
+    color: var(--navy);
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 6px 14px;
+    border-radius: 20px;
 }
-.step-card {
-    background: #f8f9fa; border-radius: 10px;
-    padding: 20px; margin-bottom: 16px;
-    border-left: 4px solid #0f3460;
+.match-badge.high { background: linear-gradient(135deg, #00c9a7, #00a381); }
+.match-badge.mid  { background: linear-gradient(135deg, #f5a623, #e0901a); color: white; }
+.match-badge.low  { background: rgba(233,69,96,0.15); color: var(--red); border: 1px solid var(--red); }
+
+/* ── SKILL GAP ── */
+.gap-section {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
 }
-.skill-have {
-    background: #e6f9ec; color: #28a745;
-    padding: 4px 12px; border-radius: 20px;
-    display: inline-block; margin: 4px;
-    font-size: 0.85rem; font-weight: 600;
+.gap-box {
+    flex: 1; min-width: 260px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
 }
-.skill-missing {
-    background: #fde8ec; color: #e94560;
-    padding: 4px 12px; border-radius: 20px;
-    display: inline-block; margin: 4px;
-    font-size: 0.85rem; font-weight: 600;
+.gap-box.have   { border-color: rgba(0,201,167,0.3); }
+.gap-box.missing{ border-color: rgba(233,69,96,0.3); }
+.gap-box-title  {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
 }
+.gap-box.have   .gap-box-title { color: var(--teal); }
+.gap-box.missing .gap-box-title { color: var(--red); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-have {
+    background: rgba(0,201,167,0.1);
+    border: 1px solid rgba(0,201,167,0.25);
+    color: var(--teal);
+    padding: 5px 13px; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 500;
+}
+.tag-miss {
+    background: rgba(233,69,96,0.1);
+    border: 1px solid rgba(233,69,96,0.25);
+    color: var(--red);
+    padding: 5px 13px; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 500;
+}
+
+/* ── CAREER STEPS ── */
+.roadmap-step {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+    align-items: flex-start;
+}
+.step-num {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--teal), var(--teal2));
+    color: var(--navy);
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.step-body {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    flex: 1;
+}
+.step-phase {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    margin-bottom: 4px;
+}
+.step-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+}
+.step-desc { font-size: 0.88rem; color: #a0b0c0; line-height: 1.65; margin-bottom: 10px; }
+.step-res  {
+    font-size: 0.8rem;
+    color: var(--muted);
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--teal);
+}
+
+/* ── PROGRESS BAR ── */
+.stProgress > div > div > div > div {
+    background: linear-gradient(90deg, var(--teal), var(--teal2)) !important;
+    border-radius: 4px !important;
+}
+.stProgress > div > div { background: rgba(255,255,255,0.06) !important; border-radius: 4px !important; }
+
+/* ── METRICS ── */
+[data-testid="stMetricValue"] {
+    font-family: 'Sora', sans-serif !important;
+    color: var(--teal) !important;
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+}
+[data-testid="stMetricLabel"] { color: var(--muted) !important; font-size: 0.78rem !important; }
+
+/* ── ALERTS ── */
+.stSuccess { background: rgba(0,201,167,0.08) !important; border-color: var(--teal) !important; color: var(--teal) !important; border-radius: 12px !important; }
+.stWarning { background: rgba(245,166,35,0.08) !important; border-color: var(--gold) !important; border-radius: 12px !important; }
+.stError   { background: rgba(233,69,96,0.08) !important; border-color: var(--red) !important; color: var(--red) !important; border-radius: 12px !important; }
+.stInfo    { background: rgba(0,201,167,0.06) !important; border-color: rgba(0,201,167,0.3) !important; border-radius: 12px !important; }
+
+/* ── DIVIDER ── */
+hr { border-color: var(--border) !important; margin: 32px 0 !important; }
+
+/* ── EXPANDER ── */
+.streamlit-expanderHeader {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    color: var(--white) !important;
+    font-family: 'Sora', sans-serif !important;
+    font-weight: 600 !important;
+}
+.streamlit-expanderContent {
+    background: var(--navy2) !important;
+    border: 1px solid var(--border) !important;
+    border-top: none !important;
+    border-radius: 0 0 12px 12px !important;
+}
+
+/* ── JOB LIST ON HOME ── */
+.job-list-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 10px;
+}
+.job-list-name {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--white);
+}
+.job-list-salary {
+    font-size: 0.82rem;
+    color: var(--teal);
+    font-weight: 600;
+}
+.job-list-type {
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+/* ── SIDEBAR LOGO ── */
+.sidebar-logo {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--teal);
+    padding: 20px 0 8px;
+    letter-spacing: -0.02em;
+}
+.sidebar-tagline {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+.sidebar-profile {
+    background: rgba(0,201,167,0.06);
+    border: 1px solid rgba(0,201,167,0.15);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 24px;
+}
+.sidebar-profile-name {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 4px;
+}
+.sidebar-profile-detail {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+/* ── SPINNER ── */
+.stSpinner > div { border-top-color: var(--teal) !important; }
+
+/* ── COLUMNS GAP ── */
+[data-testid="column"] { padding: 0 8px !important; }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ── Job Knowledge Base ────────────────────────────────────────
+# ─────────────────────────────────────────────
+# DATA
+# ─────────────────────────────────────────────
 JOB_KB = [
-    {
-        "title": "AI Engineer",
-        "company_type": "Tech / Product",
-        "salary": "₹12–25 LPA",
-        "required_skills": ["Python", "TensorFlow", "PyTorch",
-                            "Machine Learning", "Docker", "AWS"],
-        "description": "Design, build, and deploy AI/ML models into production systems."
-    },
-    {
-        "title": "Data Scientist",
-        "company_type": "Analytics / Consulting",
-        "salary": "₹8–18 LPA",
-        "required_skills": ["Python", "R", "SQL", "Statistics", "Pandas", "Tableau"],
-        "description": "Analyse large datasets to extract insights and build predictive models."
-    },
-    {
-        "title": "Machine Learning Engineer",
-        "company_type": "Startup / Enterprise",
-        "salary": "₹10–20 LPA",
-        "required_skills": ["Python", "scikit-learn", "Spark", "SQL", "Docker"],
-        "description": "Build and maintain ML pipelines and model training infrastructure."
-    },
-    {
-        "title": "Full Stack Developer",
-        "company_type": "Product / Service",
-        "salary": "₹6–16 LPA",
-        "required_skills": ["HTML", "CSS", "JavaScript", "Node.js", "React", "MySQL"],
-        "description": "Develop end-to-end web applications covering frontend and backend."
-    },
-    {
-        "title": "Frontend Developer",
-        "company_type": "Agency / Product",
-        "salary": "₹4–12 LPA",
-        "required_skills": ["HTML", "CSS", "JavaScript", "React", "TypeScript"],
-        "description": "Build responsive and accessible user interfaces."
-    },
-    {
-        "title": "Backend Developer",
-        "company_type": "Enterprise / Startup",
-        "salary": "₹5–14 LPA",
-        "required_skills": ["Node.js", "Python", "SQL", "REST API", "Docker"],
-        "description": "Design APIs, databases, and server-side application logic."
-    },
-    {
-        "title": "Data Analyst",
-        "company_type": "Finance / E-commerce",
-        "salary": "₹4–10 LPA",
-        "required_skills": ["SQL", "Excel", "Python", "Tableau", "Power BI"],
-        "description": "Transform raw data into actionable business insights."
-    },
-    {
-        "title": "DevOps Engineer",
-        "company_type": "Enterprise / Cloud",
-        "salary": "₹8–20 LPA",
-        "required_skills": ["Linux", "Docker", "Kubernetes", "Jenkins", "AWS", "Terraform"],
-        "description": "Automate CI/CD pipelines and manage cloud infrastructure."
-    },
-    {
-        "title": "Cloud Engineer",
-        "company_type": "IT / Consulting",
-        "salary": "₹8–18 LPA",
-        "required_skills": ["AWS", "Azure", "GCP", "Terraform", "Linux", "Python"],
-        "description": "Architect and maintain cloud-based infrastructure and services."
-    },
-    {
-        "title": "Cybersecurity Analyst",
-        "company_type": "Finance / Government",
-        "salary": "₹6–15 LPA",
-        "required_skills": ["Networking", "Linux", "Python", "Ethical Hacking", "SIEM"],
-        "description": "Protect systems and data from cyber threats."
-    },
+    {"title": "AI Engineer",
+     "company_type": "Tech / Product", "salary": "₹12–25 LPA",
+     "required_skills": ["Python", "TensorFlow", "PyTorch", "Machine Learning", "Docker", "AWS"],
+     "description": "Design, build, and deploy AI/ML models into production systems at scale.",
+     "icon": "🤖"},
+    {"title": "Data Scientist",
+     "company_type": "Analytics / Consulting", "salary": "₹8–18 LPA",
+     "required_skills": ["Python", "R", "SQL", "Statistics", "Pandas", "Tableau"],
+     "description": "Analyse large datasets to extract insights and build predictive models.",
+     "icon": "📊"},
+    {"title": "Machine Learning Engineer",
+     "company_type": "Startup / Enterprise", "salary": "₹10–20 LPA",
+     "required_skills": ["Python", "scikit-learn", "Spark", "SQL", "Docker"],
+     "description": "Build and maintain ML pipelines and model training infrastructure.",
+     "icon": "⚙️"},
+    {"title": "Full Stack Developer",
+     "company_type": "Product / Service", "salary": "₹6–16 LPA",
+     "required_skills": ["HTML", "CSS", "JavaScript", "Node.js", "React", "MySQL"],
+     "description": "Develop end-to-end web applications covering frontend and backend.",
+     "icon": "🌐"},
+    {"title": "Frontend Developer",
+     "company_type": "Agency / Product", "salary": "₹4–12 LPA",
+     "required_skills": ["HTML", "CSS", "JavaScript", "React", "TypeScript"],
+     "description": "Build responsive and accessible user interfaces for the web.",
+     "icon": "🎨"},
+    {"title": "Backend Developer",
+     "company_type": "Enterprise / Startup", "salary": "₹5–14 LPA",
+     "required_skills": ["Node.js", "Python", "SQL", "REST API", "Docker"],
+     "description": "Design APIs, databases, and server-side application logic.",
+     "icon": "🔧"},
+    {"title": "Data Analyst",
+     "company_type": "Finance / E-commerce", "salary": "₹4–10 LPA",
+     "required_skills": ["SQL", "Excel", "Python", "Tableau", "Power BI"],
+     "description": "Transform raw data into actionable business insights.",
+     "icon": "📈"},
+    {"title": "DevOps Engineer",
+     "company_type": "Enterprise / Cloud", "salary": "₹8–20 LPA",
+     "required_skills": ["Linux", "Docker", "Kubernetes", "Jenkins", "AWS", "Terraform"],
+     "description": "Automate CI/CD pipelines and manage scalable cloud infrastructure.",
+     "icon": "☁️"},
+    {"title": "Cloud Engineer",
+     "company_type": "IT / Consulting", "salary": "₹8–18 LPA",
+     "required_skills": ["AWS", "Azure", "GCP", "Terraform", "Linux", "Python"],
+     "description": "Architect and maintain cloud-based infrastructure and services.",
+     "icon": "🌩️"},
+    {"title": "Cybersecurity Analyst",
+     "company_type": "Finance / Government", "salary": "₹6–15 LPA",
+     "required_skills": ["Networking", "Linux", "Python", "Ethical Hacking", "SIEM"],
+     "description": "Protect systems and data from cyber threats and vulnerabilities.",
+     "icon": "🔐"},
 ]
 
-
-# ── Career Roadmaps ───────────────────────────────────────────
 ROADMAPS = {
     "ai engineer": [
         {"step": 1, "phase": "Basics",
          "title": "Python & Math Foundations",
-         "desc": "Learn Python, NumPy, Pandas. Study Linear Algebra and Statistics.",
-         "resources": "CS50P, Khan Academy, Real Python"},
+         "desc": "Learn Python, NumPy, Pandas. Study Linear Algebra, Statistics, and Probability — these underpin every ML algorithm.",
+         "resources": "CS50P (Harvard), Khan Academy Math, Real Python"},
         {"step": 2, "phase": "Core Skills",
          "title": "Machine Learning Fundamentals",
-         "desc": "Supervised/unsupervised learning, model evaluation, scikit-learn.",
+         "desc": "Master supervised and unsupervised learning, model evaluation, cross-validation, and scikit-learn workflows.",
          "resources": "Andrew Ng ML Course (Coursera), Kaggle Learn"},
         {"step": 3, "phase": "Advanced",
          "title": "Deep Learning & Frameworks",
-         "desc": "TensorFlow, PyTorch, CNNs, RNNs, Transformers, and NLP.",
-         "resources": "fast.ai, Deep Learning Specialisation, Hugging Face"},
+         "desc": "Study TensorFlow, PyTorch, CNNs, RNNs, Transformers, and NLP. Build and fine-tune neural networks.",
+         "resources": "fast.ai, Deep Learning Specialisation, Hugging Face docs"},
         {"step": 4, "phase": "Projects",
-         "title": "Build Portfolio Projects",
-         "desc": "Build image classifier, chatbot, recommendation engine. Deploy with FastAPI.",
-         "resources": "GitHub, Render, AWS EC2"},
-        {"step": 5, "phase": "Apply",
-         "title": "Certifications & Apply",
-         "desc": "Earn Google ML Engineer or TensorFlow Developer cert. Apply on LinkedIn/Naukri.",
+         "title": "Build & Deploy Portfolio Projects",
+         "desc": "Build an image classifier, chatbot, and recommendation engine. Deploy with FastAPI on a cloud server.",
+         "resources": "GitHub, Render, AWS EC2 Free Tier"},
+        {"step": 5, "phase": "MLOps",
+         "title": "Production & MLOps",
+         "desc": "Learn Docker, MLflow, CI/CD pipelines, and cloud ML services like AWS SageMaker or GCP Vertex AI.",
+         "resources": "Full Stack Deep Learning, MLflow docs, Docker docs"},
+        {"step": 6, "phase": "Apply",
+         "title": "Certifications & Job Applications",
+         "desc": "Earn Google ML Engineer or TensorFlow Developer cert. Practice LeetCode and apply on LinkedIn and Naukri.",
          "resources": "LeetCode, Pramp, LinkedIn, Naukri"},
     ],
     "data scientist": [
         {"step": 1, "phase": "Basics",
          "title": "Python & Statistics",
-         "desc": "Python, Pandas, NumPy. Descriptive statistics and hypothesis testing.",
-         "resources": "Codecademy, StatQuest (YouTube)"},
+         "desc": "Learn Python, Pandas, NumPy. Study descriptive statistics, probability distributions, and hypothesis testing.",
+         "resources": "Codecademy Python, StatQuest (YouTube), Think Stats"},
         {"step": 2, "phase": "Core Skills",
          "title": "Data Wrangling & Visualisation",
-         "desc": "Data cleaning, Matplotlib, Seaborn, Tableau, Power BI.",
-         "resources": "Kaggle, Tableau Public"},
+         "desc": "Master data cleaning, feature engineering, Matplotlib, Seaborn, and Tableau or Power BI.",
+         "resources": "Kaggle, Tableau Public, freeCodeCamp"},
         {"step": 3, "phase": "Advanced",
-         "title": "ML & Big Data",
-         "desc": "Apply ML models, advanced SQL, Spark, cloud data warehouses.",
-         "resources": "Coursera Data Science Specialisation"},
-        {"step": 4, "phase": "Apply",
+         "title": "Machine Learning & Big Data",
+         "desc": "Apply ML algorithms, advanced SQL analytics, Apache Spark, and cloud data warehouses like BigQuery.",
+         "resources": "Coursera Data Science Specialisation, Spark docs"},
+        {"step": 4, "phase": "Projects",
+         "title": "End-to-End Projects",
+         "desc": "Build EDA reports, predictive models, and live dashboards. Publish on Kaggle and GitHub.",
+         "resources": "Kaggle Competitions, GitHub, Streamlit (for dashboards)"},
+        {"step": 5, "phase": "Apply",
          "title": "Certifications & Apply",
-         "desc": "IBM Data Science or Google Data Analytics certificate.",
+         "desc": "Earn IBM Data Science Professional or Google Data Analytics certificate. Start applying.",
          "resources": "Coursera, LinkedIn, Naukri, Wellfound"},
     ],
     "full stack developer": [
         {"step": 1, "phase": "Basics",
          "title": "HTML, CSS & JavaScript",
-         "desc": "Semantic HTML, CSS Flexbox/Grid, core JavaScript ES6+.",
+         "desc": "Master semantic HTML5, CSS Flexbox and Grid, and core JavaScript ES6+ concepts.",
          "resources": "freeCodeCamp, The Odin Project, MDN Web Docs"},
-        {"step": 2, "phase": "Core Skills",
-         "title": "React & Node.js",
-         "desc": "Frontend with React, backend APIs with Node.js + Express.",
-         "resources": "React docs, Express docs"},
-        {"step": 3, "phase": "Database",
+        {"step": 2, "phase": "Frontend",
+         "title": "React.js",
+         "desc": "Build dynamic UIs with React — components, hooks, state management with Redux or Context API.",
+         "resources": "React official docs, Scrimba React Course"},
+        {"step": 3, "phase": "Backend",
+         "title": "Node.js & Express",
+         "desc": "Build REST APIs with Node.js and Express. Learn middleware, authentication, and error handling.",
+         "resources": "Express docs, The Odin Project Node"},
+        {"step": 4, "phase": "Database",
          "title": "MySQL & MongoDB",
-         "desc": "Relational DB design with MySQL and NoSQL with MongoDB.",
-         "resources": "MySQL Tutorial, MongoDB University"},
-        {"step": 4, "phase": "Projects",
+         "desc": "Design relational databases with MySQL and work with NoSQL using MongoDB.",
+         "resources": "MySQL Tutorial, MongoDB University (free)"},
+        {"step": 5, "phase": "Projects",
          "title": "Full Stack Apps",
-         "desc": "Build 2 full-stack apps. Deploy on Vercel + Render.",
+         "desc": "Build 2 complete apps (e.g. e-commerce, task manager). Deploy frontend on Vercel, backend on Render.",
          "resources": "GitHub, Vercel, Render"},
-        {"step": 5, "phase": "Apply",
-         "title": "Apply & Interview Prep",
-         "desc": "Practice system design and LeetCode. Apply on LinkedIn, Naukri.",
-         "resources": "LeetCode, system-design-primer (GitHub)"},
+        {"step": 6, "phase": "Apply",
+         "title": "Advanced Skills & Apply",
+         "desc": "Add TypeScript, Docker basics, and CI/CD. Practice system design and apply on LinkedIn and Naukri.",
+         "resources": "TypeScript Handbook, LeetCode, system-design-primer (GitHub)"},
     ],
 }
 
 GENERIC_ROADMAP = [
     {"step": 1, "phase": "Basics",
      "title": "Core Programming Fundamentals",
-     "desc": "Learn programming basics and Computer Science fundamentals.",
+     "desc": "Learn a programming language (Python recommended) and Computer Science fundamentals.",
      "resources": "CS50 (Harvard), freeCodeCamp, GeeksforGeeks"},
     {"step": 2, "phase": "Core Skills",
-     "title": "Domain-Specific Skills",
-     "desc": "Research and build proficiency in the key tools of your target role.",
+     "title": "Domain-Specific Tools",
+     "desc": "Research and build proficiency in the key tools and languages used in your target role.",
      "resources": "Coursera, Udemy, official documentation"},
     {"step": 3, "phase": "Projects",
      "title": "Build Portfolio Projects",
-     "desc": "Create 2–3 real projects and host them on GitHub.",
-     "resources": "GitHub, Vercel, Render"},
+     "desc": "Create 2–3 real projects demonstrating your skills. Host them on GitHub.",
+     "resources": "GitHub, Vercel, Render, AWS Free Tier"},
     {"step": 4, "phase": "Certifications",
      "title": "Earn Certifications",
-     "desc": "Get recognised certifications to validate your skills.",
+     "desc": "Pursue recognised industry certifications to validate your skills for employers.",
      "resources": "Coursera, edX, LinkedIn Learning"},
-    {"step": 5, "phase": "Apply",
-     "title": "Network & Apply",
-     "desc": "Update LinkedIn, write a targeted resume, apply consistently.",
-     "resources": "LinkedIn, Naukri, Internshala, LeetCode"},
+    {"step": 5, "phase": "Network",
+     "title": "Build Network & Apply",
+     "desc": "Update LinkedIn, write a targeted resume, and apply 5–10 jobs per week consistently.",
+     "resources": "LinkedIn, Naukri, Internshala, Wellfound"},
+    {"step": 6, "phase": "Interview",
+     "title": "Interview Prep & Land the Job",
+     "desc": "Practice DSA, system design, and role-specific questions. Do mock interviews.",
+     "resources": "LeetCode, HackerRank, Pramp, InterviewBit"},
 ]
 
 
-# ── Helper Functions ──────────────────────────────────────────
-def parse_skills(skills_str):
-    return [s.strip() for s in skills_str.split(",") if s.strip()]
+# ─────────────────────────────────────────────
+# HELPER FUNCTIONS
+# ─────────────────────────────────────────────
+def parse_skills(s):
+    return [x.strip() for x in s.split(",") if x.strip()]
 
-def calc_match_score(user_skills, required_skills):
-    user  = [s.lower() for s in user_skills]
-    req   = [s.lower() for s in required_skills]
-    if not req:
+def calc_score(user_skills, required):
+    u = [s.lower() for s in user_skills]
+    r = [s.lower() for s in required]
+    if not r:
         return 0
-    matched = [r for r in req if any(r in u or u in r for u in user)]
-    return round((len(matched) / len(req)) * 100)
+    matched = [x for x in r if any(x in y or y in x for y in u)]
+    return round(len(matched) / len(r) * 100)
 
-def get_recommendations(user_skills, top_n=6):
+def get_recommendations(user_skills, n=6):
     scored = []
     for job in JOB_KB:
-        score = calc_match_score(user_skills, job["required_skills"])
-        if score > 0:
-            scored.append({**job, "match_score": score})
-    scored.sort(key=lambda x: x["match_score"], reverse=True)
-    return scored[:top_n]
+        sc = calc_score(user_skills, job["required_skills"])
+        if sc > 0:
+            scored.append({**job, "score": sc})
+    return sorted(scored, key=lambda x: x["score"], reverse=True)[:n]
 
 def get_roadmap(dream_job):
     d = dream_job.lower()
@@ -244,156 +678,383 @@ def get_roadmap(dream_job):
             return steps
     return GENERIC_ROADMAP
 
-def skill_gap(user_skills, recommendations):
-    all_required = list({
-        s for job in recommendations
-        for s in job["required_skills"]
-    })
-    user_lower = [s.lower() for s in user_skills]
-    have    = [s for s in all_required if s.lower() in user_lower]
-    missing = [s for s in all_required if s.lower() not in user_lower]
+def skill_gap(user_skills, recs):
+    all_req = list({s for j in recs for s in j["required_skills"]})
+    u = [s.lower() for s in user_skills]
+    have    = [s for s in all_req if s.lower() in u]
+    missing = [s for s in all_req if s.lower() not in u]
     return have, missing
 
-
-# ── Navigation ────────────────────────────────────────────────
-st.markdown("""
-<div class="main-header">
-  <h1>🎯 Find Your <span>Dream Job</span></h1>
-  <p>Enter your skills and goals — we'll build your personalized career roadmap</p>
-</div>
-""", unsafe_allow_html=True)
-
-page = st.sidebar.selectbox(
-    "📌 Navigate",
-    ["🏠 Home", "🔍 Get Recommendations", "🗺️ Career Path"]
-)
+def badge_class(score):
+    if score >= 70: return "high"
+    if score >= 40: return "mid"
+    return "low"
 
 
-# ══════════════════════════════════════════════
-# PAGE 1 — HOME
-# ══════════════════════════════════════════════
-if page == "🏠 Home":
-    st.title("Welcome to CareerPath AI")
-    st.write("This system helps students find jobs that match their skills "
-             "and provides a step-by-step career roadmap.")
+# ─────────────────────────────────────────────
+# SIDEBAR
+# ─────────────────────────────────────────────
+with st.sidebar:
+    st.markdown('<div class="sidebar-logo">🎯 CareerPath AI</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-tagline">Personalized job recommendations<br>powered by skill matching</div>', unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
+    page = st.selectbox(
+        "NAVIGATE",
+        ["🏠  Home", "🔍  Get Recommendations", "🗺️  Career Path", "📊  All Jobs"],
+        label_visibility="visible"
+    )
 
-    with col1:
-        st.info("### 🎯 Dream Job Input\n\n"
-                "Tell us your ultimate career goal and we'll tailor "
-                "every recommendation to help you get there.")
-    with col2:
-        st.warning("### 📊 Skill Gap Analysis\n\n"
-                   "We compare your current skills against market "
-                   "requirements and highlight what you're missing.")
-    with col3:
-        st.success("### 🗺️ Career Path Guidance\n\n"
-                   "Get a step-by-step plan from basics to advanced "
-                   "skills and finally job applications.")
+    # Show saved profile if exists
+    if "name" in st.session_state:
+        st.markdown(f"""
+        <div class="sidebar-profile">
+            <div class="sidebar-profile-name">👤 {st.session_state.name}</div>
+            <div class="sidebar-profile-detail">
+                🌟 {st.session_state.get('dream_job','—')}<br>
+                🛠️ {len(st.session_state.get('skills', []))} skills added<br>
+                📅 {st.session_state.get('experience','—')}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 💼 Jobs in Our Database")
-    cols = st.columns(5)
-    for i, job in enumerate(JOB_KB):
-        with cols[i % 5]:
-            st.markdown(f"**{job['title']}**  \n{job['salary']}")
+    st.markdown('<div style="font-size:0.75rem;color:var(--muted);line-height:1.7;">Built with Python & Streamlit<br>Job Recommendation System<br>© 2025 CareerPath AI</div>', unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════
-# PAGE 2 — GET RECOMMENDATIONS
-# ══════════════════════════════════════════════
-elif page == "🔍 Get Recommendations":
-    st.title("📋 Get Job Recommendations")
-    st.write("Fill in your profile below and we'll match you with the best job roles.")
+# ─────────────────────────────────────────────
+# PAGE: HOME
+# ─────────────────────────────────────────────
+if "Home" in page:
 
-    with st.form("profile_form"):
-        col1, col2 = st.columns(2)
+    st.markdown("""
+    <div class="hero-banner">
+        <div class="hero-badge">🚀 AI-Powered Career Guidance</div>
+        <div class="hero-title">Find Your <span>Dream Job</span><br>with Smart Matching</div>
+        <div class="hero-sub">Enter your skills and career goals — we analyse your profile,
+        identify skill gaps, and build a personalised step-by-step roadmap to get you hired.</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with col1:
-            name = st.text_input("👤 Full Name", placeholder="e.g. Ravi Kumar")
-            skills_input = st.text_input(
-                "🛠️ Current Skills (comma-separated)",
-                placeholder="e.g. Python, Machine Learning, SQL"
-            )
-            experience = st.selectbox(
-                "📅 Years of Experience",
-                ["Fresher (0 years)", "1–2 years", "3–5 years", "5+ years"]
-            )
+    # Stats row
+    st.markdown("""
+    <div class="stat-row">
+        <div class="stat-card"><span class="stat-num">10</span><span class="stat-label">Job Roles</span></div>
+        <div class="stat-card"><span class="stat-num">50+</span><span class="stat-label">Skills Tracked</span></div>
+        <div class="stat-card"><span class="stat-num">3</span><span class="stat-label">Career Roadmaps</span></div>
+        <div class="stat-card"><span class="stat-num">100%</span><span class="stat-label">Free to Use</span></div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with col2:
-            dream_job = st.text_input(
-                "🌟 Dream Job Title",
-                placeholder="e.g. AI Engineer, Data Scientist"
-            )
-            interests = st.text_area(
-                "💡 Your Interests / Domains",
-                placeholder="e.g. I enjoy working with data, building models...",
-                height=120
-            )
+    # Features
+    st.markdown("""
+    <div class="feature-grid">
+        <div class="feature-card">
+            <span class="feature-icon">🎯</span>
+            <div class="feature-title">Dream Job Input</div>
+            <div class="feature-desc">Tell us your ultimate career goal and we'll tailor every recommendation to help you get there.</div>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">📊</span>
+            <div class="feature-title">Skill Gap Analysis</div>
+            <div class="feature-desc">We compare your current skills against market requirements and highlight exactly what you're missing.</div>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🗺️</span>
+            <div class="feature-title">Career Path Guidance</div>
+            <div class="feature-desc">Get a step-by-step roadmap from basics to advanced skills and finally job applications.</div>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">⚡</span>
+            <div class="feature-title">Instant Results</div>
+            <div class="feature-desc">No waiting. Get your personalised job matches and career roadmap in seconds.</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        submitted = st.form_submit_button("🔍 Get Recommendations", type="primary",
-                                          use_container_width=True)
+    # How it works
+    st.markdown("---")
+    st.markdown('<div class="section-title">How It Works</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-sub">Three simple steps to your dream career</div>', unsafe_allow_html=True)
 
-    if submitted:
-        if not name or not skills_input or not dream_job:
-            st.error("⚠️ Please fill in Name, Skills, and Dream Job.")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown("""
+        <div class="step-body" style="text-align:center; padding:32px 24px;">
+            <div style="font-size:2.5rem; margin-bottom:16px;">📝</div>
+            <div class="step-phase">Step 1</div>
+            <div class="step-title">Enter Your Profile</div>
+            <div class="step-desc">Add your name, current skills, experience level, and dream job title.</div>
+        </div>""", unsafe_allow_html=True)
+    with c2:
+        st.markdown("""
+        <div class="step-body" style="text-align:center; padding:32px 24px;">
+            <div style="font-size:2.5rem; margin-bottom:16px;">🔍</div>
+            <div class="step-phase">Step 2</div>
+            <div class="step-title">Get Matched</div>
+            <div class="step-desc">Our algorithm scores every job against your skills and shows the best matches.</div>
+        </div>""", unsafe_allow_html=True)
+    with c3:
+        st.markdown("""
+        <div class="step-body" style="text-align:center; padding:32px 24px;">
+            <div style="font-size:2.5rem; margin-bottom:16px;">🚀</div>
+            <div class="step-phase">Step 3</div>
+            <div class="step-title">Follow Your Roadmap</div>
+            <div class="step-desc">Get your personalised career path with resources for every stage.</div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown('<div class="section-title">Available Job Roles</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-sub">We match your skills against these 10 in-demand roles</div>', unsafe_allow_html=True)
+
+    for job in JOB_KB:
+        st.markdown(f"""
+        <div class="job-list-item">
+            <div>
+                <span style="font-size:1.1rem; margin-right:10px;">{job['icon']}</span>
+                <span class="job-list-name">{job['title']}</span>
+                <span class="job-list-type" style="margin-left:12px;">· {job['company_type']}</span>
+            </div>
+            <span class="job-list-salary">{job['salary']}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────
+# PAGE: GET RECOMMENDATIONS
+# ─────────────────────────────────────────────
+elif "Recommendations" in page:
+
+    st.markdown("""
+    <div class="hero-banner" style="padding:36px 40px;">
+        <div class="hero-title" style="font-size:2rem;">🔍 Get Job Recommendations</div>
+        <div class="hero-sub" style="font-size:0.95rem;">
+            Fill in your profile — we'll match you with the best roles and show your skill gaps
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Input Form ──
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title" style="font-size:1.1rem; margin-bottom:4px;">Your Profile</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-sub">All fields marked with * are required</div>', unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        name = st.text_input("👤 Full Name *", placeholder="e.g. Ravi Kumar",
+                             value=st.session_state.get("name", ""))
+        skills_input = st.text_input("🛠️ Current Skills * (comma-separated)",
+                                     placeholder="e.g. Python, Machine Learning, SQL",
+                                     value=", ".join(st.session_state.get("skills", [])))
+        experience = st.selectbox("📅 Years of Experience",
+                                  ["Fresher (0 years)", "1–2 years", "3–5 years", "5+ years"],
+                                  index=["Fresher (0 years)", "1–2 years", "3–5 years", "5+ years"].index(
+                                      st.session_state.get("experience", "Fresher (0 years)")))
+    with col2:
+        dream_job = st.text_input("🌟 Dream Job Title *",
+                                  placeholder="e.g. AI Engineer, Data Scientist",
+                                  value=st.session_state.get("dream_job", ""))
+        interests = st.text_area("💡 Interests / Domains (optional)",
+                                 placeholder="e.g. I enjoy building ML models and solving data problems...",
+                                 height=130,
+                                 value=st.session_state.get("interests", ""))
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    clicked = st.button("🔍  Analyse My Profile & Get Recommendations", type="primary")
+
+    if clicked:
+        if not name.strip() or not skills_input.strip() or not dream_job.strip():
+            st.error("⚠️ Please fill in Name, Skills, and Dream Job Title.")
         else:
             user_skills = parse_skills(skills_input)
 
-            # Save to session state for Career Path page
-            st.session_state["name"]       = name
-            st.session_state["skills"]     = user_skills
-            st.session_state["dream_job"]  = dream_job
-            st.session_state["experience"] = experience
+            # Save to session
+            st.session_state.name        = name.strip()
+            st.session_state.skills      = user_skills
+            st.session_state.dream_job   = dream_job.strip()
+            st.session_state.experience  = experience
+            st.session_state.interests   = interests
 
-            recommendations = get_recommendations(user_skills)
-            st.session_state["recommendations"] = recommendations
+            with st.spinner("Analysing your profile..."):
+                time.sleep(0.6)
+                recs = get_recommendations(user_skills)
+                st.session_state.recommendations = recs
 
-            if not recommendations:
-                st.warning("No matching jobs found. Try adding more skills.")
-            else:
-                st.success(f"✅ Found {len(recommendations)} job matches for you, {name}!")
+    # ── Show Results if available ──
+    if "recommendations" in st.session_state and st.session_state.recommendations:
+        recs        = st.session_state.recommendations
+        user_skills = st.session_state.get("skills", [])
+        name        = st.session_state.get("name", "")
+        dream_job   = st.session_state.get("dream_job", "")
 
-                # ── Skill Gap Analysis ──
-                st.markdown("---")
-                st.subheader("📊 Skill Gap Analysis")
-                have, missing = skill_gap(user_skills, recommendations)
+        st.success(f"✅ Found {len(recs)} job matches for **{name}** — sorted by best match!")
 
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown("**✅ Skills You Have**")
-                    if have:
-                        tags = "".join(
-                            f'<span class="skill-have">{s}</span>' for s in have
-                        )
-                    else:
-                        tags = "".join(
-                            f'<span class="skill-have">{s}</span>' for s in user_skills
-                        )
-                    st.markdown(tags, unsafe_allow_html=True)
+        # ── Skill Gap ──
+        st.markdown("---")
+        st.markdown('<div class="section-title">📊 Skill Gap Analysis</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-sub">Your current skills vs. what the market needs</div>', unsafe_allow_html=True)
 
-                with col2:
-                    st.markdown("**⚠️ Skills to Acquire**")
-                    if missing:
-                        tags = "".join(
-                            f'<span class="skill-missing">{s}</span>' for s in missing
-                        )
-                    else:
-                        tags = '<span class="skill-have">Great match — no major gaps!</span>'
-                    st.markdown(tags, unsafe_allow_html=True)
+        have, missing = skill_gap(user_skills, recs)
 
-                # ── Job Cards ──
-                st.markdown("---")
-                st.subheader("💼 Recommended Jobs For You")
+        have_tags    = "".join(f'<span class="tag-have">{s}</span>'    for s in (have    or user_skills))
+        missing_tags = "".join(f'<span class="tag-miss">{s}</span>'    for s in missing) if missing else '<span class="tag-have">No major gaps — great match!</span>'
 
-                for job in recommendations:
-                    with st.container():
-                        col1, col2 = st.columns([4, 1])
-                        with col1:
-                            st.markdown(f"### {job['title']}")
-                            st.markdown(
-                                f"🏢 **Company Type:** {job['company_type']}  "
-                                f"&nbsp;&nbsp; 💰 **Salary:** {job['salary']}"
-                            )
-                            st.write(job["description"])
+        st.markdown(f"""
+        <div class="gap-section">
+            <div class="gap-box have">
+                <div class="gap-box-title">✅ Skills You Have ({len(have or user_skills)})</div>
+                <div class="tags">{have_tags}</div>
+            </div>
+            <div class="gap-box missing">
+                <div class="gap-box-title">⚠️ Skills to Acquire ({len(missing)})</div>
+                <div class="tags">{missing_tags}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ── Metrics row ──
+        avg_score = round(sum(j["score"] for j in recs) / len(recs))
+        top_score = recs[0]["score"]
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Top Match",        f"{top_score}%")
+        c2.metric("Avg Match",        f"{avg_score}%")
+        c3.metric("Jobs Found",       len(recs))
+        c4.metric("Skills You Have",  len(have or user_skills))
+
+        # ── Job Cards ──
+        st.markdown("---")
+        st.markdown('<div class="section-title">💼 Recommended Jobs For You</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="section-sub">Matched to your skills for the role of <strong style="color:var(--teal)">{dream_job}</strong></div>', unsafe_allow_html=True)
+
+        user_lower = [s.lower() for s in user_skills]
+
+        for job in recs:
+            bc = badge_class(job["score"])
+            skill_pills = ""
+            for s in job["required_skills"]:
+                css = "skill-pill" if s.lower() in user_lower else "skill-pill missing"
+                skill_pills += f'<span class="{css}">{s}</span>'
+
+            st.markdown(f"""
+            <div class="job-card">
+                <span class="match-badge {bc}">{job['score']}% Match</span>
+                <div class="job-title">{job['icon']}  {job['title']}</div>
+                <div class="job-meta">
+                    🏢 {job['company_type']} &nbsp;·&nbsp;
+                    💰 <span>{job['salary']}</span>
+                </div>
+                <div class="job-desc">{job['description']}</div>
+                <div class="job-skills">{skill_pills}</div>
+                <div style="font-size:0.73rem; color:var(--muted); margin-top:10px;">
+                    🟢 Green = you have it &nbsp;·&nbsp; 🔴 Red = you need it
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+        st.info("👉 Navigate to **Career Path** in the sidebar to see your step-by-step roadmap!")
+
+
+# ─────────────────────────────────────────────
+# PAGE: CAREER PATH
+# ─────────────────────────────────────────────
+elif "Career Path" in page:
+
+    if "dream_job" not in st.session_state:
+        st.markdown("""
+        <div class="hero-banner">
+            <div class="hero-title" style="font-size:1.8rem;">🗺️ Career Roadmap</div>
+            <div class="hero-sub">No profile found. Please go to
+            <strong style="color:var(--teal)">Get Recommendations</strong>
+            first and fill in your details.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.stop()
+
+    name      = st.session_state.name
+    dream_job = st.session_state.dream_job
+    skills    = st.session_state.skills
+
+    st.markdown(f"""
+    <div class="hero-banner" style="padding:36px 40px;">
+        <div class="hero-badge">🗺️ Personalised Roadmap</div>
+        <div class="hero-title" style="font-size:2rem;">{name}'s Path to<br><span>{dream_job}</span></div>
+        <div class="hero-sub" style="font-size:0.92rem;">
+            Follow these steps consistently — each one builds on the last.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Progress
+    progress = min(len(skills) * 8, 100)
+    st.markdown(f'<div style="font-size:0.82rem; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.08em;">Profile Strength — based on {len(skills)} skills added</div>', unsafe_allow_html=True)
+    st.progress(progress)
+    st.markdown(f'<div style="font-size:0.8rem; color:var(--teal); margin-bottom:28px;">{progress}% complete — keep adding skills to improve your match score</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown('<div class="section-title">Your Step-by-Step Roadmap</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-sub">Tailored for your dream role — from basics to job applications</div>', unsafe_allow_html=True)
+
+    roadmap = get_roadmap(dream_job)
+
+    for step in roadmap:
+        st.markdown(f"""
+        <div class="roadmap-step">
+            <div class="step-num">{step['step']}</div>
+            <div class="step-body">
+                <div class="step-phase">{step['phase']}</div>
+                <div class="step-title">{step['title']}</div>
+                <div class="step-desc">{step['desc']}</div>
+                <div class="step-res">📚 <strong>Resources:</strong> {step['resources']}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.success("🚀 Follow these steps consistently and you'll reach your goal. You've got this!")
+
+    # Current skills display
+    if skills:
+        st.markdown('<div class="section-title" style="font-size:1rem; margin-top:8px;">Your Current Skills</div>', unsafe_allow_html=True)
+        pills = "".join(f'<span class="tag-have">{s}</span>' for s in skills)
+        st.markdown(f'<div class="tags" style="margin-top:10px;">{pills}</div>', unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────
+# PAGE: ALL JOBS
+# ─────────────────────────────────────────────
+elif "All Jobs" in page:
+
+    st.markdown("""
+    <div class="hero-banner" style="padding:36px 40px;">
+        <div class="hero-title" style="font-size:2rem;">📊 All Job Roles</div>
+        <div class="hero-sub" style="font-size:0.95rem;">
+            Browse all 10 roles in our database — skills required and salary ranges
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    search = st.text_input("🔎 Search by job title or skill", placeholder="e.g. Python, React, Cloud...")
+
+    filtered = JOB_KB
+    if search.strip():
+        q = search.strip().lower()
+        filtered = [j for j in JOB_KB
+                    if q in j["title"].lower()
+                    or any(q in s.lower() for s in j["required_skills"])]
+
+    st.markdown(f'<div class="section-sub">{len(filtered)} role(s) found</div>', unsafe_allow_html=True)
+
+    for job in filtered:
+        skill_pills = "".join(f'<span class="skill-pill">{s}</span>' for s in job["required_skills"])
+        st.markdown(f"""
+        <div class="job-card">
+            <div class="job-title">{job['icon']}  {job['title']}</div>
+            <div class="job-meta">
+                🏢 {job['company_type']} &nbsp;·&nbsp;
+                💰 <span>{job['salary']}</span>
+            </div>
+            <div class="job-desc">{job['description']}</div>
+            <div class="job-skills">{skill_pills}</div>
+        </div>
+        """, unsafe_allow_html=True)
