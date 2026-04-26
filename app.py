@@ -874,19 +874,48 @@ if "Home" in page:
             <div class="step-desc">Get your personalised career path with resources for every stage.</div>
         </div>""", unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown('<div class="section-title">Available Job Roles</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-sub">We match your skills against these 15 in-demand roles</div>', unsafe_allow_html=True)
-    for job in JOB_KB:
-        st.markdown(f"""
-        <div class="job-list-item">
-            <div>
-                <span style="font-size:1.1rem; margin-right:10px;">{job['icon']}</span>
-                <span class="job-list-name">{job['title']}</span>
-                <span class="job-list-type" style="margin-left:12px;">· {job['company_type']}</span>
-            </div>
-            <span class="job-list-salary">{job['salary']}</span>
-        </div>
-        """, unsafe_allow_html=True)
+    
+    colA, colB = st.columns(2)
+    
+    with colA:
+        st.markdown('<div class="form-card" style="height: 100%;">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title" style="font-size:1.2rem;">🔍 Quick Skill Match</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-sub" style="margin-bottom:15px;">Find the job you need based on your skills</div>', unsafe_allow_html=True)
+        
+        quick_skills = st.text_input("Enter your skills (comma-separated)", placeholder="e.g. Python, React, AWS", key="home_skills")
+        if quick_skills.strip():
+            user_skills = parse_skills(quick_skills)
+            recs = get_recommendations(user_skills, n=1)
+            if recs:
+                best_job = recs[0]
+                user_lower = [s.lower() for s in user_skills]
+                missing = [s for s in best_job["required_skills"] if s.lower() not in user_lower]
+                
+                st.success(f"**Top Match:** {best_job['icon']} {best_job['title']} ({best_job['score']}%)")
+                st.markdown(f"<div style='font-size:0.85rem; color:var(--muted); margin-bottom:10px;'>{best_job['description']}</div>", unsafe_allow_html=True)
+                
+                if missing:
+                    st.warning(f"**Skills to learn:** {', '.join(missing)}")
+                else:
+                    st.info("You have all the required skills for this role!")
+        st.markdown('</div>', unsafe_allow_html=True)
+    with colB:
+        st.markdown('<div class="form-card" style="height: 100%;">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title" style="font-size:1.2rem;">💼 Job Requirements</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-sub" style="margin-bottom:15px;">Check what skills you need for a specific job</div>', unsafe_allow_html=True)
+        
+        job_titles = [j["title"] for j in JOB_KB]
+        selected_job_title = st.selectbox("Select a Job Role", job_titles, key="home_jobs")
+        
+        if selected_job_title:
+            job_info = next((j for j in JOB_KB if j["title"] == selected_job_title), None)
+            if job_info:
+                st.markdown(f"<div style='font-size:0.85rem; color:var(--muted); margin-bottom:15px;'>{job_info['description']}</div>", unsafe_allow_html=True)
+                st.markdown("**Required Skills:**")
+                skill_pills = "".join(f'<span class="skill-pill">{s}</span>' for s in job_info["required_skills"])
+                st.markdown(f'<div class="job-skills" style="margin-top:0;">{skill_pills}</div>', unsafe_allow_html=True)
+                
+        st.markdown('</div>', unsafe_allow_html=True)
 # ─────────────────────────────────────────────
 # PAGE: GET RECOMMENDATIONS
 # ─────────────────────────────────────────────
